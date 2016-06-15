@@ -7,15 +7,31 @@ from bs4 import BeautifulSoup
 class HTMLPrebuilder(object):
     """Minify HTML associated with CSS for prebuilding"""
     def __init__(self, args):
-        self.srcdir = args.srcdir
-        self.validate_src(self.srcdir)
+        self.env = args.srcdir
+        self.validate_env(self.env)
+        self.html = []
+        self.src = {
+            '.html': self.html,
+            '.htm': self.html,
+            '.css': [],
+            '.js': []
+        }
+        self.load_src(self.env)
+        self.isprebuild = args.isprebuild
 
-    def validate_src(self, src):
-        """Validate source directory and pack source files"""
-        if not os.path.isdir(src):
-            raise IOError('No such source directory {}'.format(src))
-        valid_exts = { '.html': 0, '.htm': 1 }
-        for file in os.listdir(src):
-            if os.path.isfile(src + file):
-                if os.path.splitext(file)[1] in valid_exts:
-                    print()
+    def validate_env(self, env):
+        """Validate source directory"""
+        if not os.path.isdir(env):
+            raise IOError("No such source directory '{}'".format(env))
+
+    def load_src(self, dirname):
+        """Load source files"""
+        for file in os.listdir(dirname):
+            filepath = os.path.join(dirname, file)
+            if os.path.isfile(filepath):
+                try:
+                    self.src[os.path.splitext(file)[1]].append(filepath)
+                except:
+                    pass
+            elif os.path.isdir(filepath):
+                self.load_src(filepath)
